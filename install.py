@@ -13,7 +13,7 @@ print(config["cronify_folder"])
 
 if not os.path.isdir(config["cronify_folder"]):
     os.makedirs(config["cronify_folder"], exist_ok=True)
-
+    subprocess.run(["chown","-R www-data:www-data", config["cronify_folder"]], shell=True, check=True)
 def init():
     while True:
         username=input("enter the username of the admin account you want to create > ") or "admin"

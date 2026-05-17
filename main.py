@@ -13,7 +13,6 @@ with open("config.yml", 'r') as stream:
 
 app = Flask("cronify")
 app.config['SECRET_KEY'] = config["secret_key"]
-print(f"Secret KEY : {app.config['SECRET_KEY']}")
 
 #path to the db
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{config["cronify_folder"]}/database.db'
