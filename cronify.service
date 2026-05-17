@@ -1,0 +1,12 @@
+[Unit]
+Description=Cronify Web UI
+After=multi-user.target
+
+[Service]
+Restart=always
+User=nobody
+WorkingDirectory=/var/www/cronify
+ExecStart=/usr/bin/python3 /var/www/cronify/main.py
+
+[Install]
+WantedBy=multi-user.target

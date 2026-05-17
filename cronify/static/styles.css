@@ -1,0 +1,80 @@
+/* Ensure the page takes up 100% of the screen height */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #2b2735; 
+    display: flex;
+    flex-direction: column; /* Stack navbar, agents, and form vertically */
+}
+
+#info-agents {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    right: 2%;
+    top: 15px; /* Aligns it nicely near the top right */
+}
+#info-agents button {
+    color: #294F9A;
+    width: 32px;
+    height: 32px;
+    z-index: 50;         
+    pointer-events: auto;
+}
+#cronify-form {
+    display: flex;
+    background-color: #363143; /* Lighter violet-gray */
+    border: 1px solid rgba(255, 255, 255, 0.08); /* Soft, subtle light border instead of harsh black */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Adds depth */
+    border-radius: 8px; /* Slightly smoother corners */
+    width: 70%;
+    height: 60%; /* Changed from 100% so it looks like a centered card. Adjust as needed! */
+    /* Perfect centering trick inside a flex body */
+    margin: auto; 
+    position: relative;
+}
+
+#close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+/* Corrected selector: The form is INSIDE the div */
+#cronify-form form {
+    display: flex;
+    flex-direction: column; /* Stacks inputs vertically. Remove if you want them horizontal */
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+}
+
+input {
+    border: 1px solid #2f2a3a;
+    border-radius: 5px;
+    background-color: aliceblue;
+    margin: 1%;
+    padding: 8px; /* Added padding for readability */
+    width: 80%;   /* Gives inputs good breathing room */
+    color: black;
+}
+
+#submit {
+    background-color: aliceblue;
+    width: 30%;   /* Adjusted for better scaling */
+    padding: 8px;
+    cursor: pointer;
+    border: 1px solid #2f2a3a;
+    border-radius: 5px;
+}
+#form-title {
+    font-size: xx-large;
+}

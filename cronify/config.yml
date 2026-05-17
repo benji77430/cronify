@@ -1,3 +1,4 @@
 cronify_folder: "/var/lib/cronify"
 secret_key: change-this-very-secret-key-for-cookie-encryption
+user: "nobody"
 debug_mode: true
