@@ -35,7 +35,7 @@ def init():
             
             db.session.add(admin)
             db.session.commit()
-            print("account '{username}' created successfully!")
+            print(f"account '{username}' created successfully!")
         else:
             print(f"'{username}' account already exists. Skipping provisioning.")
 

@@ -1,4 +1,4 @@
-from flask import Flask,render_template,send_file,request,redirect,url_for
+from flask import Flask,render_template,send_file,request,redirect,url_for,flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -27,8 +27,6 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
 
-if not os.path.isdir(config["cronify_folder"]):
-    print("Cronify config folder does not exist consider running \"sudo /usr/bin/python3 install.py\" or check the config.yaml !")
 
 
 #User db init
@@ -70,5 +68,15 @@ def dashboard():
 def route():
     return redirect("/dashboard",302)
 
+@app.route("/api/cron", methods=['GET', 'POST'])
+@login_required
+def api_cron():
+    if request.method == 'POST':
+        pass
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0",port=port)
+    if not os.path.isdir(config["cronify_folder"]):
+        print("Cronify config folder does not exist consider running \"sudo /usr/bin/python3 install.py\" or check the config.yaml !")
+        exit(1)
+    print(f"debug mode : {config["debug_mode"]}")
+    app.run(host="0.0.0.0",port=port,debug=bool(config["debug_mode"]))
