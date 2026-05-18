@@ -48,7 +48,7 @@
         </div>
         <div id="jobs">
             <table>
-                <tr class="grid grid-cols-7 gap-4 font-bold border-b pb-2 text-gray-400">
+                <tr class="grid grid-cols-8 gap-2 font-bold border-b pb-2 text-gray-400">
                     <td>id</td>
                     <td>minute</td>
                     <td>hour</td>
@@ -59,7 +59,7 @@
                     <td>command</td>
                 </tr>
                 {% for job in jobs %}
-                    <tr onclick="deleteJob('{{ job[0] }}')" class="grid grid-cols-7 gap-4 py-3 border-b border-black text-sm text-gray-400 items-center cursor-pointer hover:bg-red-500/10 hover:text-red-400 transition-colors group">
+                    <tr onclick="deleteJob('{{ job[0] }}')" class="grid grid-cols-8 gap-4 py-3 border-b border-black text-sm text-gray-400 items-center cursor-pointer hover:bg-red-500/10 hover:text-red-400 transition-colors group">
                         <td>{{ job[0] }}</td>
                         <td>{{ job[1] }}</td>
                         <td>{{ job[2] }}</td>

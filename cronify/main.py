@@ -90,7 +90,7 @@ def dashboard():
         
         results = cursor.fetchall()
         for result in results:
-            jobs.append([result[0],result[1],result[2],result[3],result[4],result[5],result[6]])
+            jobs.append([result[0],result[1],result[2],result[3],result[4],result[5],result[6],result[7]])
     except sqlite3.Error as e:
         print(f"An error occurred: {e}")
     if request.method == 'POST':
@@ -101,7 +101,7 @@ def dashboard():
         weekday=request.form.get('weekday')
         user=request.form.get('user')
         command=request.form.get('command')
-        if not minute or not hour or not day or not month or not weekday or not command:
+        if not minute or not hour or not day or not month or not weekday or not command or not user:
             flash("ALL FIELDS ARE REQUIRED !","error")
             return render_template('index.html',jobs=jobs)
         conn = sqlite3.connect(os.path.join(config["cronify_folder"],"crons.db"))
@@ -121,8 +121,8 @@ def dashboard():
     
         try:
             cursor.execute(
-                "INSERT INTO cronjobs (minute, hour, day, month, weekday, command) VALUES (?, ?, ?, ?, ?, ?)",
-                (minute, hour, day, month, weekday, command)
+                "INSERT INTO cronjobs (minute, hour, day, month, weekday, user, command) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (minute, hour, day, month, weekday, user,command)
             )
             conn.commit()
             print("Data logged successfully.")
@@ -151,6 +151,7 @@ def delete_job():
             day TEXT NOT NULL,
             month TEXT NOT NULL,
             weekday TEXT NOT NULL,
+            user TEXT NOT NULL,
             command TEXT NOT NULL
         )
     ''')
@@ -189,7 +190,7 @@ def api_cron():
         
         results = cursor.fetchall()
         for result in results:
-            jobs.append({"id": result[0],"minute": result[1],"hour":  result[2],"day":  result[3],"month":  result[4],"weekday":  result[5],"command":  result[6]})
+            jobs.append({"id": result[0],"minute": result[1],"hour":  result[2],"day":  result[3],"month":  result[4],"weekday":  result[5],"user":  result[6],"command":  result[7]})
         if len(results) < 1:
             return jsonify({"status": "error", "message": "No jobs found"})
         return jsonify({"jobs": jobs})

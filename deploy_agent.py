@@ -5,19 +5,19 @@ agent_content = r"""package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"github.com/google/uuid"
+	"io"
 	"log"
 	"net/http"
-	"time"
-	"io"
-	"fmt"
 	"os"
 	"strings"
-	"github.com/google/uuid"
+	"time"
 )
 
 // Define the payload structure to match what the Flask API expects
 type HeartbeatPayload struct {
-	AgentID string `json:"agent_id"`
+	AgentID   string `json:"agent_id"`
 	AgentName string `json:"agent_name"`
 }
 type APIResponse struct {
@@ -30,14 +30,15 @@ type CronJob struct {
 	Day     string `json:"day"`
 	Month   string `json:"month"`
 	Weekday string `json:"weekday"`
+	User    string `json:"user"`
 	Command string `json:"command"`
 }
+
 const (
-	// Change this to your Flask server's actual IP and port
-	AgentName	   = "###AGENTNAME###"
-	server 		   = "###AGENTHOST###"
-	port		   = "###AGENTPORT###"
-	serverURL      = "http://"+server+":"+port+"/api/handshake"
+	AgentName      = "###AGENTNAME###"
+	server         = "###AGENTHOST###"
+	port           = "###AGENTPORT###"
+	serverURL      = "http://" + server + ":" + port + "/api/handshake"
 	reportInterval = 30 * time.Second
 )
 
@@ -51,36 +52,36 @@ func main() {
 		Timeout: 5 * time.Second,
 	}
 
-	// 2. Send the very first heartbeat immediately upon startup
-	sendHeartbeat(client, agentID,AgentName)
+	// 2. Send the very first heartbeat and cron check immediately upon startup
+	sendHeartbeat(client, agentID, AgentName)
 	updatecron()
 
-	// 3. Set up a ticker to repeat the handshake every 30 seconds
-	ticker := time.NewTicker(reportInterval)
-	defer ticker.Stop()
+	// 3. Set up tickers
+	heartbeatTicker := time.NewTicker(reportInterval)
+	cronTicker := time.NewTicker(reportInterval * 2)
+	defer heartbeatTicker.Stop()
+	defer cronTicker.Stop()
 
-	for range ticker.C {
-		sendHeartbeat(client, agentID,AgentName)
-	}
-	ticker_updatecron := time.NewTicker(reportInterval*2)
-	defer ticker_updatecron.Stop()
-
-	for range ticker_updatecron.C {
-		//run update cron job 
-		updatecron()
+	// FIX: Use a select block inside a single loop, or run them in goroutines.
+	// Otherwise, the first for loop blocks the second one from ever starting!
+	for {
+		select {
+		case <-heartbeatTicker.C:
+			sendHeartbeat(client, agentID, AgentName)
+		case <-cronTicker.C:
+			updatecron()
+		}
 	}
 }
 
 func sendHeartbeat(client *http.Client, id string, AgentName string) {
-	// Prepare the JSON payload
-	payload := HeartbeatPayload{AgentID: id,AgentName: AgentName}
+	payload := HeartbeatPayload{AgentID: id, AgentName: AgentName}
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		log.Printf("Error formatting JSON: %v\n", err)
 		return
 	}
 
-	// Create the POST request
 	req, err := http.NewRequest("POST", serverURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		log.Printf("Error creating request: %v\n", err)
@@ -88,7 +89,6 @@ func sendHeartbeat(client *http.Client, id string, AgentName string) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	// Send the request
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Printf("Server unreachable: %v\n", err)
@@ -104,36 +104,32 @@ func sendHeartbeat(client *http.Client, id string, AgentName string) {
 }
 
 func updatecron() {
-	resp,err := http.Get("http://"+server+":"+port+"/api/cron")
-	log.Println(resp)
+	resp, err := http.Get("http://" + server + ":" + port + "/api/cron")
 	if err != nil {
-			log.Printf("Server unreachable: %v\n", err)
-			return
-		}
+		log.Printf("Server unreachable: %v\n", err)
+		return
+	}
 	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Server returned bad status: %s\n", resp.Status)
 		return
 	}
+
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Failed to read response body: %v\n", err)
 		return
 	}
+
 	var statusCheck map[string]string
 	json.Unmarshal(bodyBytes, &statusCheck)
 
-	// 2. Check if the API explicitly sent back an error status
 	if statusCheck["status"] == "error" {
 		log.Printf("API Notification: %s (No actions taken)\n", statusCheck["message"])
-		
-		// Optional: Clear out /etc/cron if you want it empty when there are no jobs
-		// os.WriteFile("/etc/cron", []byte(""), 0644)
-		
-		return // Exit early since there are no jobs to loop through!
+		return
 	}
 
-	// 3. If it wasn't an error, carry on parsing your jobs wrapper safely!
 	var apiData APIResponse
 	err = json.Unmarshal(bodyBytes, &apiData)
 	if err != nil {
@@ -141,34 +137,38 @@ func updatecron() {
 		return
 	}
 
-	// 4. Now this loop is 100% safe from crashing when the DB is empty
 	log.Printf("Successfully parsed %d cron jobs.\n", len(apiData.Jobs))
-	for _, job := range apiData.Jobs {
-		log.Printf("Command to write: %s", job.Command)
-	}
-	// 1. Create a slice of strings to hold each formatted crontab line
+
 	var cronLines []string
-
-	// 2. Loop through every job and format it into a string line
 	for _, job := range apiData.Jobs {
-		// Formats exactly to: "minute hour day month weekday command"
-		line := fmt.Sprintf("%s %s %s %s %s %s", 
-			job.Minute, job.Hour, job.Day, job.Month, job.Weekday, job.Command)
-		
-		cronLines = append(cronLines, line) // Add the line to our collection
+		line := fmt.Sprintf("%s %s %s %s %s %s %s",
+			job.Minute, job.Hour, job.Day, job.Month, job.Weekday, job.User, job.Command)
+		cronLines = append(cronLines, line)
 	}
 
-	// 3. Join all individual cron lines together with line breaks
-	// Also add a final trailing newline (\n) at the very end so Linux cron reads it properly
 	cronContent := strings.Join(cronLines, "\n") + "\n"
 
-	// 4. Convert the string to raw bytes and write it straight to /etc/cron
-	cronFilePath := "/etc/crontab"
-	err = os.WriteFile(cronFilePath, []byte(cronContent), 0644)
-	if err != nil {
-		log.Printf("Failed to write crontabs to %s: %v (Are you running with sudo?)\n", cronFilePath, err)
+	tmpPath := "/etc/cron.d/cronify.tmp"
+	finalPath := "/etc/cron.d/cronify"
+
+	// FIX 1: Convert string to []byte using []byte(cronContent)
+	// FIX 2: Log the errors instead of trying to return them out of a void function
+	if err := os.WriteFile(tmpPath, []byte(cronContent), 0644); err != nil {
+		log.Printf("Failed to write temp file: %v\n", err)
 		return
 	}
+
+	if err := os.Chown(tmpPath, 0, 0); err != nil {
+		log.Printf("Failed to chown temp file to root: %v\n", err)
+		return
+	}
+
+	if err := os.Rename(tmpPath, finalPath); err != nil {
+		log.Printf("Failed to atomically replace cronify file: %v\n", err)
+		return
+	}
+
+	log.Println("Successfully updated /etc/cron.d/cronify atomically.")
 }"""
 
 cronify_agent_service_content = r"""
