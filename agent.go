@@ -161,7 +161,7 @@ func updatecron() {
 	cronContent := strings.Join(cronLines, "\n") + "\n"
 
 	// 4. Convert the string to raw bytes and write it straight to /etc/cron
-	cronFilePath := "/etc/crontab"
+	cronFilePath := "/etc/cron.d/cronify"
 	err = os.WriteFile(cronFilePath, []byte(cronContent), 0644)
 	if err != nil {
 		log.Printf("Failed to write crontabs to %s: %v (Are you running with sudo?)\n", cronFilePath, err)
