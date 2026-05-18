@@ -34,11 +34,11 @@ body {
     border-radius: 8px; /* Slightly smoother corners */
     /* Perfect centering trick inside a flex body */
     width: 70%;
-    height: 65%;
+    height: 72%;
     align-self: center;
     margin-left: 15%;
-    padding-top: 5%;
-    padding-bottom: 5%;
+    padding-top: 2%;
+    padding-bottom: 2%;
 }
 
 #close {
@@ -62,7 +62,7 @@ input {
     border: 1px solid #2f2a3a;
     border-radius: 5px;
     background-color: aliceblue;
-    margin: 1%;
+    margin: 0.5%;
     padding: 8px; /* Added padding for readability */
     width: 80%;   /* Gives inputs good breathing room */
     color: black;
