@@ -19,7 +19,7 @@ shutil.move("cronify","/var/www/cronify")
 if not os.path.isdir(config["cronify_folder"]):
     os.makedirs(config["cronify_folder"], exist_ok=True)
 if Path(config["cronify_folder"]).owner() != config["user"]:
-    subprocess.run(f"chown -R {config["user"]}:{config["user"]} {config["cronify_folder"]}", shell=True, check=True)
+    subprocess.run(f"chown -R {config["user"]} {config["cronify_folder"]}", shell=True, check=True)
     print(f"user '{config["user"]}' now own the folder: {config["cronify_folder"]}")
 
 app = Flask("cronify")
