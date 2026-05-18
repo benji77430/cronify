@@ -99,6 +99,7 @@ def dashboard():
         day=request.form.get('day')
         month=request.form.get('month')
         weekday=request.form.get('weekday')
+        user=request.form.get('user')
         command=request.form.get('command')
         if not minute or not hour or not day or not month or not weekday or not command:
             flash("ALL FIELDS ARE REQUIRED !","error")
@@ -113,6 +114,7 @@ def dashboard():
                 day TEXT NOT NULL,
                 month TEXT NOT NULL,
                 weekday TEXT NOT NULL,
+                user TEXT NOT NULL,
                 command TEXT NOT NULL
             )
         ''')

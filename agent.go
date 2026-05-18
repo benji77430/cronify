@@ -28,6 +28,7 @@ type CronJob struct {
 	Day     string `json:"day"`
 	Month   string `json:"month"`
 	Weekday string `json:"weekday"`
+	User string `json:"user"`
 	Command string `json:"command"`
 }
 const (
@@ -150,8 +151,8 @@ func updatecron() {
 	// 2. Loop through every job and format it into a string line
 	for _, job := range apiData.Jobs {
 		// Formats exactly to: "minute hour day month weekday command"
-		line := fmt.Sprintf("%s %s %s %s %s %s", 
-			job.Minute, job.Hour, job.Day, job.Month, job.Weekday, job.Command)
+		line := fmt.Sprintf("%s %s %s %s %s %s %s", 
+			job.Minute, job.Hour, job.Day, job.Month, job.Weekday, job.User, job.Command)
 		
 		cronLines = append(cronLines, line) // Add the line to our collection
 	}
@@ -160,11 +161,19 @@ func updatecron() {
 	// Also add a final trailing newline (\n) at the very end so Linux cron reads it properly
 	cronContent := strings.Join(cronLines, "\n") + "\n"
 
-	// 4. Convert the string to raw bytes and write it straight to /etc/cron
-	cronFilePath := "/etc/cron.d/cronify"
-	err = os.WriteFile(cronFilePath, []byte(cronContent), 0644)
-	if err != nil {
-		log.Printf("Failed to write crontabs to %s: %v (Are you running with sudo?)\n", cronFilePath, err)
-		return
-	}
+	tmpPath := "/etc/cron.d/cronify.tmp"
+    finalPath := "/etc/cron.d/cronify"
+
+    // 1. Write the temp file with 644 permissions
+    if err := os.WriteFile(tmpPath, cronContent, 0644); err != nil {
+        return err
+    }
+
+    // 2. Ensure root ownership
+    if err := os.Chown(tmpPath, 0, 0); err != nil {
+        return err
+    }
+
+    // 3. Atomic overwrite
+    return os.Rename(tmpPath, finalPath)
 }

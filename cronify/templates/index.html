@@ -55,6 +55,7 @@
                     <td>day</td>
                     <td>month</td>
                     <td>weekday</td>
+                    <td>user</td>
                     <td>command</td>
                 </tr>
                 {% for job in jobs %}
@@ -66,6 +67,7 @@
                         <td>{{ job[4] }}</td>
                         <td>{{ job[5] }}</td>
                         <td>{{ job[6] }}</td>
+                        <td>{{ job[7] }}</td>
                     </tr>
                 {% endfor %}
             </table>
