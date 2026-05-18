@@ -1,4 +1,6 @@
-package main
+import shutil,os,sys,yaml
+
+agent_content = r"""package main
 
 import (
 	"bytes"
@@ -32,9 +34,9 @@ type CronJob struct {
 }
 const (
 	// Change this to your Flask server's actual IP and port
-	AgentName	   = "Server"
-	server 		   = "192.168.0.154"
-	port		   = "2766"
+	AgentName	   = "###AGENTNAME###"
+	server 		   = "###AGENTHOST###"
+	port		   = "###AGENTPORT###"
 	serverURL      = "http://"+server+":"+port+"/api/handshake"
 	reportInterval = 30 * time.Second
 )
@@ -167,4 +169,43 @@ func updatecron() {
 		log.Printf("Failed to write crontabs to %s: %v (Are you running with sudo?)\n", cronFilePath, err)
 		return
 	}
-}
+}"""
+
+cronify_agent_service_content = r"""
+[Unit]
+Description=Cronify Agent
+After=multi-user.target
+
+[Service]
+Restart=always
+User=root
+WorkingDirectory=/etc/cronify
+ExecStart=/etc/cronify/agent
+
+[Install]
+WantedBy=multi-user.target"""
+
+if shutil.which("go") is None:
+    print("please install golang first !")
+    exit(1)
+
+if os.getuid != 0:
+    print("please run the script as root ! ")
+
+if not os.path.isdir(os.path.join("/etc","cronify")):
+    os.makedirs(os.path.join("/etc","cronify"),exist_ok=True)
+
+if not os.path.isfile(os.path.join("/etc","cronify","agent.go")):
+    agent_name=input("enter the name of your agent (agent) : ") or "agent"
+    agent_host=input("enter the ip or FQDN of your server (127.0.0.1) : ") or "127.0.0.1"
+    agent_port=input("enter the port of the webui (2766) : ") or "2766"
+    open(os.path.join("/etc","cronify","agent.go"),"w").write(agent_content.replace(r"###AGENTNAME###",agent_name).replace(r"###AGENTHOST###",agent_host).replace(r"###AGENTPORT###",agent_port))
+    current_dir=os.path.dirname(os.path.abspath(sys.argv[0]))
+    os.chdir(os.path.join("/etc","cronify"))
+    subprocess.run("go build agent.go")
+    os.chdir(current_dir)
+
+if not os.path.isfile(os.path.join("/etc","systemd","system","cronify_agent.service")):
+    open(os.path.join("/etc","systemd","system","cronify_agent.service"),"w").write(cronify_agent_service_content)
+    subprocess.run("systemctl enable cronify_agent.service")
+    subprocess.run("systemctl start cronify_agent.service")

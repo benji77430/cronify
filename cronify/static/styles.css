@@ -28,16 +28,17 @@ body {
     pointer-events: auto;
 }
 #cronify-form {
-    display: flex;
     background-color: #363143; /* Lighter violet-gray */
     border: 1px solid rgba(255, 255, 255, 0.08); /* Soft, subtle light border instead of harsh black */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Adds depth */
     border-radius: 8px; /* Slightly smoother corners */
-    width: 70%;
-    height: 60%; /* Changed from 100% so it looks like a centered card. Adjust as needed! */
     /* Perfect centering trick inside a flex body */
-    margin: auto; 
-    position: relative;
+    width: 70%;
+    height: 65%;
+    align-self: center;
+    margin-left: 15%;
+    padding-top: 5%;
+    padding-bottom: 5%;
 }
 
 #close {
@@ -77,4 +78,25 @@ input {
 }
 #form-title {
     font-size: xx-large;
+}
+.flash {
+    display: flex;
+    text-align: center;
+    width: max-content;
+    height: max-content;
+    position: sticky;
+    align-self: center;
+}
+#jobs {
+    background-color: #2f2a3a;
+    top: 5%;
+    align-self: center;
+    display: flex;
+    width: 60%;
+    padding: 1%;
+    border: 1px solid rgba(255, 255, 255, 0.08); ;
+    border-radius: 5px;
+}
+#jobs td {
+    text-align: center;
 }
