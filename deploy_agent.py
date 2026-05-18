@@ -1,4 +1,4 @@
-import shutil,os,sys,yaml
+import shutil,os,sys,yaml,subprocess
 
 agent_content = r"""package main
 
@@ -185,6 +185,22 @@ ExecStart=/etc/cronify/agent
 [Install]
 WantedBy=multi-user.target"""
 
+go_mod = r"""module agent
+
+go 1.26.3
+
+require (
+	github.com/google/uuid v1.6.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+)
+
+"""
+go_sum = r"""github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
+github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
+gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+"""
 if shutil.which("go") is None:
     print("please install golang first !")
     exit(1)
@@ -202,10 +218,17 @@ if not os.path.isfile(os.path.join("/etc","cronify","agent.go")):
     open(os.path.join("/etc","cronify","agent.go"),"w").write(agent_content.replace(r"###AGENTNAME###",agent_name).replace(r"###AGENTHOST###",agent_host).replace(r"###AGENTPORT###",agent_port))
     current_dir=os.path.dirname(os.path.abspath(sys.argv[0]))
     os.chdir(os.path.join("/etc","cronify"))
-    subprocess.run("go build agent.go")
+    open(os.path.join("/etc","cronify","go.mod"),'w').write(go_mod)
+    open(os.path.join("/etc","cronify","go.sum"),'w').write(go_sum)
+    subprocess.run("go build agent.go",shell=True,check=True)
     os.chdir(current_dir)
+
+if not os.path.isfile(os.path.join("/etc","cron.d","cronify")):
+    subprocess.run("chown root:root /etc/cron.d/cronify",shell=True,check=True)
+    subprocess.run("chmod 644 /etc/cron.d/cronify",shell=True,check=True)
+    
 
 if not os.path.isfile(os.path.join("/etc","systemd","system","cronify_agent.service")):
     open(os.path.join("/etc","systemd","system","cronify_agent.service"),"w").write(cronify_agent_service_content)
-    subprocess.run("systemctl enable cronify_agent.service")
-    subprocess.run("systemctl start cronify_agent.service")
+    subprocess.run("systemctl enable cronify_agent.service",shell=True,check=True)
+    subprocess.run("systemctl start cronify_agent.service",shell=True,check=True)
