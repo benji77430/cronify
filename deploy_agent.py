@@ -223,9 +223,6 @@ if not os.path.isfile(os.path.join("/etc","cronify","agent.go")):
     subprocess.run("go build agent.go",shell=True,check=True)
     os.chdir(current_dir)
 
-if not os.path.isfile(os.path.join("/etc","cron.d","cronify")):
-    subprocess.run("chown root:root /etc/cron.d/cronify",shell=True,check=True)
-    subprocess.run("chmod 644 /etc/cron.d/cronify",shell=True,check=True)
     
 
 if not os.path.isfile(os.path.join("/etc","systemd","system","cronify_agent.service")):
